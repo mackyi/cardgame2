@@ -1,4 +1,15 @@
 
+#hand{
+	height: 150px;
+	margin: 10px;
+	background-color:red;
+}
+#hand: first-child{
+	margin-left: 10px;
+} 
+#hand: card{
+	card
+}
 ul.nav{
 	height: 40px;
 }
@@ -10,10 +21,6 @@ body{
 
 h2 {
 	color:#DEDEDE;
-}
-
-p {
-	color:#DEDEDE
 }
 .spacer {
 	margin-bottom: 40px;
@@ -70,7 +77,7 @@ p {
 }
 
 
-/*.gamePicture{
-	margin: 5px;
-}*/
+.gamePicture{
+	margin: 10px;
+}
 

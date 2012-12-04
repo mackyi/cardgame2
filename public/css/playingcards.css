@@ -21,6 +21,7 @@
   position: relative;
   z-index: 2;
 }
+
 .card.noshadow {
   -moz-box-shadow: none;
   -webkit-box-shadow: none;

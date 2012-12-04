@@ -153,7 +153,6 @@
 
     CardView.prototype.events = {
       'click': 'flip',
-      'buttonClick': 'flip'
     };
 
     CardView.prototype.initialize = function() {};

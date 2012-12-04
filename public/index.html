@@ -10,6 +10,11 @@
   <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.1/underscore-min.js"></script>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.2/backbone-min.js"></script>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/hogan.js/2.0.0/hogan.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="javascript/lib/jquery.flippy.min.js"></script>
+    <script src="javascript/lib/dat.gui.min.js"></script>
+    <script src="javascript/playingcards.js"></script>
+  <script src="javascript/chat.js"></script>
 	
 </head>
 
@@ -21,7 +26,7 @@
 			      <li class="active"><a class="brand" href="Alextest.html">Card Game</a></li>
 			 	    <li><a href="index.html">Play</a></li>
 	          <li><a href="#">Learn</a></li>
-	          <li><a href="#">Connect</a></li>
+	          <li><a href="chattest.html">Connect</a></li>
 			    </ul> 
 			    <a class="btn btn-primary pull-right" href="login2.html"> Log in Now &raquo;</a>
 			  </div>  
@@ -46,6 +51,8 @@
             </div>
           </div>
         </div>
+        <button class='btn' id="startButton">Start</button>
+        <div class="span6" id="hand">Hand</div>
         <div class="pull-right">
           <img src="images/defaultprofile.png" class="img-rounded gamePicture">
         </div>
@@ -136,19 +143,8 @@
         <div class="corner bottom"><span class="number">A</span><span>{{{suit.symbol}}}</span></div>
       </div>
     </script>
-    <script src="javascript/lib/jquery.flippy.min.js"></script>
-    <script src="javascript/lib/dat.gui.min.js"></script>
-    <script src="javascript/playingcards.js"></script>
-    <script src="javascript/demo.js"></script>
+    
     <link rel="stylesheet" href="css/playingcards.css" media="all">
-    <link rel="stylesheet" href="css/demo.css" media="all">
-
-
-
-
-  <script src="javascript/gameengine.js"></script>
-  <script src="javascript/war.js"></script>
-  <script src="javascript/frontend.js"></script>
 </body>		
 	
 <footer>
