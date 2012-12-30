@@ -1,0 +1,20 @@
+extends game-layout
+
+prepend content
+	.gamebox
+		#gametable
+			.span12
+				#oppHand.span12
+		.row
+			.span4
+				#chatBox
+					#content
+					#status Connecting...
+					input#input(type="text", disabled="disabled")
+			.span1
+				p Players:
+				ul.unstyled#players
+				button.btn#startButton Start
+
+			.span5#hand
+			.pull-right: img.img-rounded.gamePicture(src="images/defaultprofile.png")

@@ -31,7 +31,7 @@ $(function () {
     connection.onopen = function () {
         // first we want users to enter their names
         input.removeAttr('disabled');
-        status.text('Choose name:');
+        status.text('Name?');
     };
 
     connection.onerror = function (error) {

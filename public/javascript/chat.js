@@ -5,6 +5,7 @@ $(function () {
     var input = $('#input');
     var status = $('#status');
 
+    var players = [];
     // my color assigned by the server
     var myColor = false;
     // my name sent to the server
@@ -15,7 +16,7 @@ $(function () {
 		console.log('hi')
         // first we want users to enter their names
         input.removeAttr('disabled');
-        status.text('Choose name:');
+        status.text('Name?');
     });
     socket.on('history', function(history){
     	for (var i=0; i < history.length; i++) {
@@ -23,6 +24,7 @@ $(function () {
                            history[i].color, new Date(history[i].time));
             }
     })
+
 	socket.on('color', function(color){
 		console.log(color)
 		myColor = color;
@@ -30,6 +32,17 @@ $(function () {
         input.removeAttr('disabled').focus();
         // from now user can start sending messages
 	})
+
+    socket.on('updateUsers', function(users){
+        $('#players').empty();
+        console.log('updating users');
+        for(_i=0; _i<users.length; _i++)
+        {
+            $('#players').append('<li>'+users[_i]+'</li>');
+            console.log('in for loop');
+            players.push(users[_i]);
+        }
+    })
     input.keydown(function(e) {
         if (e.keyCode === 13) {
             var msg = input.val();
@@ -106,18 +119,54 @@ $(function () {
     var deckModel;
 
     $('#startButton').on('click', function(){
-        $('#startButton').attr('disabled', 'disabled');
-        deckModel=new PlayingCards.DeckModel(null, {front:false});
-        deckModel.shuffle();
-        socket.emit('startGame', deckModel);
-        showDeck();
+        if(players.length>1){
+            $('#startButton').attr('disabled', 'disabled');
+            startMWar();
+        }
+        else{
+            alert('Not enough players!')
+        }
     })
-
+    
     socket.on('updateDeck', function(deckM){
         deckModel=new PlayingCards.DeckModel(deckM, {});
         showDeck();
     });
     
+    socket.on('startgame', function(deck1, deck2,player1,player2){
+        deck1= new PlayingCards.DeckModel(deck1, {});
+        deck2 = new PlayingCards.DeckModel(deck2, {});
+        if (myName===player1){
+            myDeck=deck1
+            yourDeck=deck2
+        }
+
+        else if(myName===player2){
+            myDeck=deck2
+            yourDeck=deck1  
+        }
+        myDeck.each(function(cardModel){
+                cardModel.attributes.front=true;
+            })
+        myView = new PlayingCards.DeckView({
+            el:$('#hand'),
+            model: myDeck,
+            templates: new PlayingCards.Templates()
+        })
+        myView.setCardWidth(65);
+        console.log(myView);
+        myView.render();
+
+        yourView = new PlayingCards.DeckView({
+            el:$('#oppHand'),
+            model: yourDeck,
+            templates: new PlayingCards.Templates()
+        })
+        yourView.setCardWidth(65);
+        yourView.render();
+
+    })
+
     function showDeck(){
         deckView = new PlayingCards.DeckView({
           el: $('#cards'),
@@ -127,5 +176,32 @@ $(function () {
         deckView.setCardWidth(65);
 
         deckView.render();
+    }
+
+    function startMWar(){
+        opponent=selectOpponent();
+        deckModel=new PlayingCards.DeckModel(null, {front:false});
+        deckModel.shuffle();
+        console.log(deckModel);
+        myCards = [], yourCards= [];
+        for(_i=0; _i<26;_i++){
+            myCards.push(deckModel.models[_i]);
+        }
+        for(_i=26; _i<52;_i++){
+            yourCards.push(deckModel.models[_i]);
+        }
+        myHandModel=new PlayingCards.DeckModel(myCards, {})
+        yourHandModel = new PlayingCards.DeckModel(yourCards, {})
+        console.log(yourHandModel);
+        socket.emit('startGame', 'MWar', myHandModel, yourHandModel, myName, opponent);
+    }
+
+    function selectOpponent(){
+        opponent=players[0];
+        if(opponent === myName)
+        {
+            opponent=players[1];
+        }
+        return opponent;
     }
 })
