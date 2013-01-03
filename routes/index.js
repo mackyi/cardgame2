@@ -1,6 +1,6 @@
 
 var db = require('../accessDB');
-
+User = require('../models/user');
 module.exports = {
 	// app.get('/')
 	home: function(req, res) {
@@ -14,16 +14,15 @@ module.exports = {
 
 	//app.post('/register'...)
 	postRegister: function(req, res) {
+		console.log(req.body)
 		db.saveUser({
-			fname: req.param('name.first'),
-			lname: req.param('name.last'),
-			email: req.param('email'),
 			password: req.param('password'),
-			username: req.param('username')},
-			function(err,docs) {
-				res.redirect('/account');
+			username: req.param('username')}
+			, function(err,docs) {
+			 	res.redirect('/');
 			}
 		)
+		console.log('success')
 	},
 
 	//app.get('/about', ...)

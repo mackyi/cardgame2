@@ -18,9 +18,9 @@ passport.use(new LocalStrategy(
       User.findOne({ username: username }, function(err, user) {
         if (err) { return done(err); }
         if (!user) { return done(null, false, { message: 'Incorrect username.' }); }
-        user.verifyPassword(password, function(err, passwordCorrect){
+        user.verifyPassword(password, function(err, same){
           if(err){return callback(err); }
-          if(!passwordCorrect){return done(null, false, { message: 'Invalid password.' }); };
+          if(!same){return done(null, false, { message: 'Invalid password.' }); };
           return done(null, user);
         })
       });
@@ -42,7 +42,7 @@ passport.deserializeUser(function(id, done) {
 });
 
 function findByUsername(username, fn) {
-  user = models.User.findOne({ username: username});
+  user = User.findOne({ username: username});
     if(user){
       return fn(null, user);
     }
@@ -63,17 +63,14 @@ module.exports = {
 
   // save a user
   saveUser: function(userInfo, callback) {
-    //console.log(userInfo['fname']);
-    var newUser = new User ({
-      name : { first: userInfo.fname, last: userInfo.lname }
-    , email: userInfo.email
-    , password: userInfo.password
-    , username: userInfo.username
+    var newUser = new User({
+      password: userInfo.password,
+      username: userInfo.username
     });
-
+    console.error(newUser);
     newUser.save(function(err) {
       if (err) {throw err;}
-      //console.log('Name: ' + newUser.name + '\nEmail: ' + newUser.email);
+    // console.log('Name: ' + newUser.name + '\nEmail: ' + newUser.email);
       callback(null, userInfo);
     });
   },

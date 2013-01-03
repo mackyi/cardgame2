@@ -15,10 +15,12 @@ module.exports = function(app){
 
 	app.get('/', start.home);
 
+	app.get('/register', start.getRegister);
 
 	app.post('/login', 
 			passport.authenticate('local', {successRedirect: '/',
                                   			failureRedirect: '/login',
                                   			failureFlash: true}));
+	app.post('/register', start.postRegister);
 };
 

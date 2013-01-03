@@ -48,7 +48,7 @@ app.configure('production', function(){
   app.use(express.errorHandler()); 
 });
 
-require('./socket')(server, PlayingCards)
+// require('./socket')(server, PlayingCards)
 
 require('./routes')(app);
 

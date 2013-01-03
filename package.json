@@ -16,7 +16,8 @@
     "connect-flash":"0.1.0",
     "bcrypt":"0.7.3",
     "connect-mongodb":"1.1.5",
-    "jade": "0.27.7"
+    "jade": "0.27.7",
+    "util": "0.4.9"
   },
   "engines": {
     "node": "0.8.8",

@@ -1,8 +1,8 @@
 // Models
 var mongoose = require('mongoose');
 var models = {};
-models.User = require('./models/user')(mongoose).model;
-models.Game = require('./models/game')(mongoose).model;
+models.User = require('./models/user');
+models.Game = require('./models/game');
 
 
 module.exports = function(server, PlayingCards){
