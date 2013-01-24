@@ -1,58 +1,63 @@
 // Models
 var mongoose = require('mongoose');
-var models = {};
-models.User = require('./models/user');
-models.Game = require('./models/game');
+User = require('./models/user');
+Game = require('./models/game');
 
 
-module.exports = function(server, PlayingCards){
-	var io = require('socket.io').listen(server);
-
+module.exports = function(io, PlayingCards){
 	/**
 	 * Global variables
 	 */
 	// usernames which are currently connected to the chat
-	var usernames = {};
+	var usernames = [];
 	// latest 100 messages
 	var history = [];
+	// games which are available
+	var games = [];
 
-	// rooms which are currently available in chat
-	var game1 = new models.Game();
-	console.log(game1)
-	game1.name = 'game1'
-	var games = [game1,'game2','game3'];
-	var rooms = ['room1','room2','room3'];
-
-	/**
-	 * Helper function for escaping input strings
-	 */
-
+	//testing room
+	test = new Game({name: 'test', gameType: 'mWar'});
+	games.push(test);
+	test.save();
 	// Array with some colors in random order
 	var colors = [ 'red', 'green', 'blue', 'magenta', 'purple', 'plum', 'orange' ];
 	colors.sort(function(a,b) { return Math.random() > 0.5; } );
 
-
+	/**
+	 * Helper function for escaping input strings
+	 */
 	function htmlEntities(str) {
 	    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 	                      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	}
+
 	io.sockets.on('connection', function(socket){
+		console.log('A socket with sessionID ' + socket.handshake.sessionID + ' connected!');
+		// allows for socket to do io.sockets.in(req.sessionID).emit();
+		socket.join(socket.handshake.sessionID);
+
 		var username = false;
 	    var userColor = false;
 	    console.log((new Date()) + ' Connection accepted.');
 	    if (history.length > 0) {
 	        socket.emit('history',history);
 	    }
-	    socket.user = new models.User();
+	    socket.user = new User();
 	    socket.user.username=setname('guest');
-	    socket.room = game1;
 	    // send client to room 1
+	    socket.room = test
 			socket.join(socket.room.name);
 		socket.room.users.push(socket.user);
 		socket.room.usernames.push(socket.user.username);
 		socket.emit('updateUsers', socket.room.usernames);
 		socket.broadcast.to(socket.room.name).emit('updateUsers', socket.room.usernames);
 
+		socket.on('newgame', function(options){
+			console.log('starting new game');
+			games[games.length]= new Game(options);
+
+
+		})
 		// when the client emits 'adduser', this listens and executes
 		socket.on('adduser', function(name){
 			console.log('hi1');
@@ -71,7 +76,8 @@ module.exports = function(server, PlayingCards){
 				socket.username = name;
 			}
 			socket.user.username= socket.username;
-			socket.room.usernames.splice(socket.room.usernames.indexOf(oldname), 1, socket.user.username);		
+			socket.room.usernames.splice(socket.room.usernames.indexOf(oldname), 1, socket.user.username);	
+			test.save();
 			socket.emit('updateUsers', socket.room.usernames);
 			// get random color and send it back to the user
 	        socket.userColor = colors.shift();

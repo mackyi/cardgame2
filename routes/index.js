@@ -1,10 +1,20 @@
 
 var db = require('../accessDB');
 User = require('../models/user');
-module.exports = {
+Game = require('../models/game');
+
+function checkAuth(req, res, next) {
+    is_logged_in = !!req.session.passport.user;
+    next();
+}
+
+
+module.exports = function(io){
+	return {
 	// app.get('/')
 	home: function(req, res) {
-		res.render('home.jade');
+		res.render('home.jade', {locals:{
+			currentUser: req.user}});
 	},
 
 	//app.get('/register'...)
@@ -32,6 +42,8 @@ module.exports = {
 
 	//app.get('/login', ...)
 	login: function(req, res) {
+		console.log(req.session.passport.user);
+		console.log(req.user);
 		res.render('login.jade')
 	},
 
@@ -45,6 +57,13 @@ module.exports = {
 	      });
 	    });
 	},
+
+	play: function(req, res){
+		Game.find({active: true}, function(err, games){
+			res.render('play.jade', {locals:
+				{gamelist: games}})
+		} )
+	},
 	// app.get('/game')
 	game: function(req, res) {
 		res.render('game.jade')
@@ -55,4 +74,5 @@ module.exports = {
      	req.logout();
      	res.redirect('/');
   }
+}
 };

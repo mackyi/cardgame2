@@ -3,13 +3,16 @@
 var express = require('express'),
 	passport = require('passport'),
 	mongoose = require('mongoose'),
-	mongoStore = require('connect-mongodb'),
 	backbone=require('backbone'),
 	flash=require('connect-flash'),
-	PlayingCards=require('./public/javascript/playingcards-server')(backbone)
+	PlayingCards=require('./public/javascript/playingcards-server')(backbone),
+  MemoryStore = express.session.MemoryStore,
+  sessionStore = new MemoryStore(),
+  cookie = require('cookie'),
+  connect =require('connect');
 
 app = express(),
-server = require('http').createServer(app)
+server = require('http').createServer(app);
 
 var DB = require('./accessDB');
 
@@ -29,13 +32,12 @@ app.configure(function(){
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(express.session({ 
-  	store: mongoStore(conn),
-  	secret: 'signalandnoise'},
-  	function() {
-  		app.use(app.router);
-  	}));
+    store: sessionStore,
+  	key:  'express.sid',
+  	secret: 'signalandnoise'}));
   app.use(passport.initialize());
   app.use(passport.session());
+  app.use(app.router);
 });
 
 db = new DB.startup(conn);
@@ -48,9 +50,37 @@ app.configure('production', function(){
   app.use(express.errorHandler()); 
 });
 
-// require('./socket')(server, PlayingCards)
+var io = require('socket.io').listen(server);
+io.set('authorization', function (handshakeData, accept) {
 
-require('./routes')(app);
+    if (handshakeData.headers.cookie) {
+
+        handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
+
+        handshakeData.sessionID = connect.utils.parseSignedCookie(handshakeData.cookie['express.sid'], 'signalandnoise');
+
+        if (handshakeData.cookie['express.sid'] == handshakeData.sessionID) {
+          return accept('Cookie is invalid.', false);
+        }
+
+    } else {
+        return accept('No cookie transmitted.', false);
+      } 
+    sessionStore.get(handshakeData.sessionID, function (err, session) {
+            if (err || !session) {
+                // if we cannot grab a session, turn down the connection
+                return accept('Error', false);
+            } else {
+                // save the session data 
+                handshakeData.session = session;
+            }
+      });
+    accept(null, true);
+  });
+
+require('./socket')(io, PlayingCards)
+
+require('./routes')(app, io);
 
 var port = process.env.PORT || 8080;
 server.listen(port, function() {

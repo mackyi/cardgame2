@@ -8,10 +8,14 @@ block content
 				.hero-unit(align="center")
 					h1 Anycard
 					p We varies them.
-					p
-						a.btn.btn-primary.btn-large(href="/login") Log in Now &raquo
-					p
-						a.btn.btn-inverse.btn-large(href="/register") Register an Account &raquo
+					- if (typeof locals.currentUser !== 'undefined')
+						p  your username is #{locals.currentUser.username}
+					- else
+						p
+							a.btn.btn-primary.btn-large(href="/login") Log in Now &raquo
+						p
+							a.btn.btn-inverse.btn-large(href="/register") Register an Account &raquo
+					
 			.span3
 				#hand
 		.row		

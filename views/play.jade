@@ -1,0 +1,18 @@
+extends layout
+block head
+	title Choose a Game
+block scripts
+	script(src="/socket.io/socket.io.js")
+block content
+	games = locals.gamelist
+	mixin game(game)
+		.gameLabel
+			p #{game.name}
+			p #{game.gameType}
+			p #{game.usernames[0]}
+			ul.userlist
+				-each user in game.usernames
+					li=user
+	.container.backBox
+		-each game in games
+			mixin game(game)

@@ -6,10 +6,11 @@ var ObjectId = Schema.ObjectId;
 
 var schema = new Schema({
   game_id: ObjectId,
-  game_type: String,
+  gameType: String,
   name: String,
   users: [ObjectId],
-  usernames: [String]
+  usernames: [String],
+  active: {type: Boolean, default: true}
 });
   
 module.exports= mongoose.model(collection, schema);

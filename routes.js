@@ -1,17 +1,24 @@
+var User = require('./models/user');
+
 var passport = require('passport');
 
-var start = require('./routes/index')
+
 
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
   res.redirect('/login')
 }
 
-module.exports = function(app){
+
+
+module.exports = function(app, io){
+	var start = require('./routes/index')(io);
 
 	app.get('/login', start.login);
 
 	app.get('/game', start.game);
+
+	app.get('/play', start.play);
 
 	app.get('/', start.home);
 
