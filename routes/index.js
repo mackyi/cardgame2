@@ -9,7 +9,7 @@ function checkAuth(req, res, next) {
 }
 
 
-module.exports = function(io){
+module.exports = function(io, games){
 	return {
 	// app.get('/')
 	home: function(req, res) {

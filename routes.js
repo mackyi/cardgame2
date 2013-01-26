@@ -11,14 +11,14 @@ function ensureAuthenticated(req, res, next) {
 
 
 
-module.exports = function(app, io){
-	var start = require('./routes/index')(io);
+module.exports = function(app, io, games){
+	var start = require('./routes/index')(io, games);
 
 	app.get('/login', start.login);
 
-	app.get('/game', start.game);
+	app.get('/game', ensureAuthenticated, start.game);
 
-	app.get('/play', start.play);
+	app.get('/play', ensureAuthenticated, start.play);
 
 	app.get('/', start.home);
 

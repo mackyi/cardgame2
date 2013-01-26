@@ -1,24 +1,20 @@
 // Models
-var mongoose = require('mongoose');
-User = require('./models/user');
-Game = require('./models/game');
+var mongoose = require('mongoose'),
+	User = require('./models/user'),
+	Game = require('./models/game'),
+	PlayingCards=require('./public/javascript/playingcards-server');
 
 
-module.exports = function(io, PlayingCards){
-	/**
-	 * Global variables
-	 */
-	// usernames which are currently connected to the chat
-	var usernames = [];
-	// latest 100 messages
-	var history = [];
-	// games which are available
-	var games = [];
+module.exports = function(io, games){
 
 	//testing room
-	test = new Game({name: 'test', gameType: 'mWar'});
-	games.push(test);
-	test.save();
+	Game.find({}, function(err, dbGames){
+		games = dbGames;
+	})
+	
+	// var test = new Game({name: 'test', gameType: 'mWar'});
+	// games.push(test);
+	// test.save();
 	// Array with some colors in random order
 	var colors = [ 'red', 'green', 'blue', 'magenta', 'purple', 'plum', 'orange' ];
 	colors.sort(function(a,b) { return Math.random() > 0.5; } );
@@ -32,32 +28,55 @@ module.exports = function(io, PlayingCards){
 	}
 
 	io.sockets.on('connection', function(socket){
-		console.log('A socket with sessionID ' + socket.handshake.sessionID + ' connected!');
-		// allows for socket to do io.sockets.in(req.sessionID).emit();
-		socket.join(socket.handshake.sessionID);
+		//doesn't work ?
+		if(typeof socket.handshake.sessionID === 'undefined' || typeof socket.handshake.session === 'undefined'){
+			socket.disconnect();
+		}
 
-		var username = false;
-	    var userColor = false;
-	    console.log((new Date()) + ' Connection accepted.');
-	    if (history.length > 0) {
-	        socket.emit('history',history);
-	    }
-	    socket.user = new User();
-	    socket.user.username=setname('guest');
-	    // send client to room 1
-	    socket.room = test
+		var userColor = false;
+		socket.user = null;
+		try{
+			console.log('A socket with sessionID ' + socket.handshake.sessionID + ' connected!');
+			// allows for socket to do io.sockets.in(req.sessionID).emit();
+			socket.join(socket.handshake.sessionID);
+			User.findById(socket.handshake.session.passport.user, function(err, user){
+				console.log(user.username); //works
+				socket.user = user;
+			});
+		}
+		catch(err){
+			console.log('No session, ' +err);
+		}
+		
+
+	    // if (history.length > 0) {
+	    //     socket.emit('history',history);
+	    // }
+
+	 	// join the default room
+	 	try{
+	 		socket.room = test;
 			socket.join(socket.room.name);
-		socket.room.users.push(socket.user);
-		socket.room.usernames.push(socket.user.username);
+
+	 	}
+	 	catch(err){
+	 		console.log('Failed to join game because ' + err);
+	 	}
+ 		socket.room.users.push(socket.user);
 		socket.emit('updateUsers', socket.room.usernames);
 		socket.broadcast.to(socket.room.name).emit('updateUsers', socket.room.usernames);
+		io.sockets.in(socket.room.name)
+
 
 		socket.on('newgame', function(options){
 			console.log('starting new game');
 			games[games.length]= new Game(options);
-
-
 		})
+
+		socket.on('joingame', function(){
+			console.log('in game')
+		})
+
 		// when the client emits 'adduser', this listens and executes
 		socket.on('adduser', function(name){
 			console.log('hi1');

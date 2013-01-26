@@ -3,9 +3,8 @@
 var express = require('express'),
 	passport = require('passport'),
 	mongoose = require('mongoose'),
-	backbone=require('backbone'),
 	flash=require('connect-flash'),
-	PlayingCards=require('./public/javascript/playingcards-server')(backbone),
+	PlayingCards=require('./public/javascript/playingcards-server'),
   MemoryStore = express.session.MemoryStore,
   sessionStore = new MemoryStore(),
   cookie = require('cookie'),
@@ -78,9 +77,12 @@ io.set('authorization', function (handshakeData, accept) {
     accept(null, true);
   });
 
-require('./socket')(io, PlayingCards)
+// list of current games
+var games = [];
 
-require('./routes')(app, io);
+require('./socket')(io, games)
+
+require('./routes')(app, io, games);
 
 var port = process.env.PORT || 8080;
 server.listen(port, function() {
