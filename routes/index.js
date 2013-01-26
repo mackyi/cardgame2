@@ -14,7 +14,7 @@ module.exports = function(io, games){
 	// app.get('/')
 	home: function(req, res) {
 		res.render('home.jade', {locals:{
-			currentUser: req.user}});
+			user: req.user}});
 	},
 
 	//app.get('/register'...)

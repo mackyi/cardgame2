@@ -9,15 +9,19 @@ $(function () {
     // my color assigned by the server
     var myColor = false;
     // my name sent to the server
-    var myName = false;
+    var myName;
 	// on connection to server, ask for user's name with an anonymous callback
 
 	socket.on('connect', function () {
 		console.log('hi')
         // first we want users to enter their names
-        input.removeAttr('disabled');
-        status.text('Name?');
+        socket.emit('joinGame');
     });
+    socket.on('gameInfo', function(username){
+        myName = username;
+        input.removeAttr('disabled');
+        status.text(myName);
+    })
     socket.on('history', function(history){
     	for (var i=0; i < history.length; i++) {
                 addMessage(history[i].author, history[i].text,

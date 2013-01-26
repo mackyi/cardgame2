@@ -37,4 +37,12 @@ cardgame2
 
 	next: same as last time. 
 	also: figure out a way to keep usernames, users, usercolors, etc. in some reasonable way. updating a bunch of stuff every time seems like a pain in the ass.
-	
+
+1/26
+	games is mostly working
+	adapted chat for multiple rooms and logged in users...mostly. colors is still not moved over, among other things.
+	play has now replaced games on navbar and able to pass game_id to html. not sure how to proceed
+	next: 
+		put links on play.jade, and probably make it presentable too
+		use locals.message to make redirects make more sense than they are now
+		make a game in sockets, man.

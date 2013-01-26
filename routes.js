@@ -9,18 +9,27 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/login')
 }
 
+function LocalUser(req, res, next){
+	res.locals.user = req.user;
+  	next();
+}
 
+function LocalGame_Id(req, res, next){
+	console.log(req.params.game_id);
+	res.locals.game_id = req.params.game_id;
+	next();
+}
 
 module.exports = function(app, io, games){
 	var start = require('./routes/index')(io, games);
 
 	app.get('/login', start.login);
 
-	app.get('/game', ensureAuthenticated, start.game);
+	app.get('/game/:game_id', ensureAuthenticated, LocalUser, LocalGame_Id, start.game);
 
 	app.get('/play', ensureAuthenticated, start.play);
 
-	app.get('/', start.home);
+	app.get('/', LocalUser, start.home);
 
 	app.get('/register', start.getRegister);
 

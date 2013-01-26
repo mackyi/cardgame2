@@ -10,7 +10,11 @@ var schema = new Schema({
   name: String,
   users: [ObjectId],
   usernames: [String],
-  active: {type: Boolean, default: true}
-});
+  active: {type: Boolean, default: true},
+  chat: {
+  	history: [String],
+  	userColors: [String]
+  }
+})
   
 module.exports= mongoose.model(collection, schema);

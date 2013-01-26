@@ -8,8 +8,8 @@ block content
 				.hero-unit(align="center")
 					h1 Anycard
 					p We varies them.
-					- if (typeof locals.currentUser !== 'undefined')
-						p  your username is #{locals.currentUser.username}
+					- if (typeof locals.user !== 'undefined')
+						p  your username is #{locals.user.username}
 					- else
 						p
 							a.btn.btn-primary.btn-large(href="/login") Log in Now &raquo

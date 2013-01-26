@@ -4,20 +4,23 @@ var mongoose = require('mongoose'),
 	Game = require('./models/game'),
 	PlayingCards=require('./public/javascript/playingcards-server');
 
-
 module.exports = function(io, games){
-
-	//testing room
-	Game.find({}, function(err, dbGames){
-		games = dbGames;
-	})
-	
-	// var test = new Game({name: 'test', gameType: 'mWar'});
-	// games.push(test);
-	// test.save();
 	// Array with some colors in random order
 	var colors = [ 'red', 'green', 'blue', 'magenta', 'purple', 'plum', 'orange' ];
 	colors.sort(function(a,b) { return Math.random() > 0.5; } );
+
+
+	//testing room
+	Game.find({active: true}, function(err, dbGames){
+			games = dbGames;
+			var history = [];
+			games[0].chat = {history: history, userColors: colors};
+	})
+
+	// var test = new Game({name: 'test', gameType: 'mWar'});
+	// games.push(test);
+	// test.save();
+	
 
 	/**
 	 * Helper function for escaping input strings
@@ -33,15 +36,37 @@ module.exports = function(io, games){
 			socket.disconnect();
 		}
 
+		//initialize some stuff
 		var userColor = false;
-		socket.user = null;
+
+		// get user from session
 		try{
 			console.log('A socket with sessionID ' + socket.handshake.sessionID + ' connected!');
 			// allows for socket to do io.sockets.in(req.sessionID).emit();
 			socket.join(socket.handshake.sessionID);
 			User.findById(socket.handshake.session.passport.user, function(err, user){
+				if(err){
+					console.log('No user found. what the hell, ' + err);
+				}
 				console.log(user.username); //works
 				socket.user = user;
+				try{
+			 		socket.room = games[0];
+					socket.join(socket.room.name);
+					// update game users
+				 	try{
+				 		socket.room.users.push(socket.user);
+				 		socket.room.usernames.push(socket.user.username);
+						io.sockets.in(socket.room.name).emit('updateUsers', socket.room.usernames);
+				 	}
+			 		catch(err){
+			 			console.log('Failed to update users because ' + err);
+			 		}
+
+			 	}
+			 	catch(err){
+			 		console.log('Failed to join game because ' + err);
+			 	}
 			});
 		}
 		catch(err){
@@ -51,21 +76,7 @@ module.exports = function(io, games){
 
 	    // if (history.length > 0) {
 	    //     socket.emit('history',history);
-	    // }
-
-	 	// join the default room
-	 	try{
-	 		socket.room = test;
-			socket.join(socket.room.name);
-
-	 	}
-	 	catch(err){
-	 		console.log('Failed to join game because ' + err);
-	 	}
- 		socket.room.users.push(socket.user);
-		socket.emit('updateUsers', socket.room.usernames);
-		socket.broadcast.to(socket.room.name).emit('updateUsers', socket.room.usernames);
-		io.sockets.in(socket.room.name)
+	    // }	 	
 
 
 		socket.on('newgame', function(options){
@@ -73,55 +84,15 @@ module.exports = function(io, games){
 			games[games.length]= new Game(options);
 		})
 
-		socket.on('joingame', function(){
-			console.log('in game')
-		})
-
-		// when the client emits 'adduser', this listens and executes
-		socket.on('adduser', function(name){
-			console.log('hi1');
-			oldname = socket.user.username;
-			// store the username in the socket session for this client
-			if(usernames[name]){
-				console.log('already exists')
-				k=1;
-				socket.username=name+k
-				while(usernames[username]){
-					socket.username=name + ++k;
-				}
-				socket.emit('changename', socket.username)
-			}
-			else{
-				socket.username = name;
-			}
-			socket.user.username= socket.username;
-			socket.room.usernames.splice(socket.room.usernames.indexOf(oldname), 1, socket.user.username);	
-			test.save();
-			socket.emit('updateUsers', socket.room.usernames);
-			// get random color and send it back to the user
-	        socket.userColor = colors.shift();
+		socket.on('joinGame', function(){
+			console.log('in game');
+			socket.userColor = colors.shift();
 	        socket.emit('color', socket.userColor)
-			// store the room name in the socket session for this client
-			
-			console.log(socket.room)
-			// add the client's username to the global list
-			usernames[socket.username] = socket.username;
-			console.log(usernames);
-			console.log((new Date()) + ' User is known as: ' + socket.username
-	                            + ' with ' + socket.userColor + ' color.');
-			
-			// echo to client they've connected
-			socket.emit('updatechat', {time: (new Date()).getTime(), 
+			socket.emit('gameInfo', socket.user.username);
+			io.sockets.in(socket.room.name).emit('updatechat', {time: (new Date()).getTime(), 
 				text:'You have connected to ' + socket.room.name, author: 'Server', color: 'black'});
-			// echo to room 1 that a person has connected to their room
-			socket.broadcast.to(socket.room.name).emit('updatechat', {time: (new Date()).getTime(), 
-				text: socket.username + ' has connected to this room', author: 'Server', color: 'black'});
-			//socket.emit('updaterooms', rooms, 'room1');
-
-			//update userlist
-			socket.emit('updateUsers', socket.room.usernames);
-			socket.broadcast.to(socket.room.name).emit('updateUsers', socket.room.usernames);
-		});
+		})
+		// when the client emits 'adduser', this listens and executes
 		
 		function setname(name){
 			if(usernames[name]){
@@ -144,11 +115,11 @@ module.exports = function(io, games){
 	                var obj = {
 	                    time: (new Date()).getTime(),
 	                    text: htmlEntities(data),
-	                    author: socket.username,
+	                    author: socket.user.username,
 	                    color: socket.userColor
 	                };
-	                history.push(obj);
-	                history = history.slice(-100);
+	                socket.room.chat.history.push(obj);
+	                socket.room.chat.history = socket.room.chat.history.slice(-100);
 
 			// we tell the client to execute 'updatechat' with 2 parameters
 			io.sockets.in(socket.room.name).emit('updatechat', obj);
@@ -178,14 +149,13 @@ module.exports = function(io, games){
 		})
 		// when the user disconnects.. perform this
 		socket.on('disconnect', function(){
-			// remove the username from global usernames list
-			delete usernames[socket.username];
-			// update list of users in chat, client-side
-			io.sockets.emit('updateusers', usernames);
+			
 			// echo globally that this client has left
 			socket.broadcast.to(socket.room).emit('updatechat', 'SERVER', socket.username + ' has disconnected');
 			socket.room.users.splice(socket.room.users.indexOf(socket.user),1);
 			socket.room.usernames.splice(socket.room.usernames.indexOf(socket.username),1);
+			// update list of users in chat, client-side
+			io.sockets.emit('updateusers', socket.room.usernames);
 			socket.broadcast.to(socket.room.name).emit('updateUsers', socket.room.usernames);
 			socket.leave(socket.room.name);
 			colors.push(userColor);

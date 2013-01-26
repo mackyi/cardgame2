@@ -9,7 +9,7 @@ $(function () {
     // my color assigned by the server
     var myColor = false;
     // my name sent to the server
-    var myName = false;
+    var myName = req.user.username;
 
      $("content").prop({ scrollTop: $("content").prop("scrollHeight") });
 
@@ -31,7 +31,7 @@ $(function () {
     connection.onopen = function () {
         // first we want users to enter their names
         input.removeAttr('disabled');
-        status.text('Name?');
+        status.text(myName);
     };
 
     connection.onerror = function (error) {
@@ -106,7 +106,7 @@ $(function () {
     setInterval(function() {
         if (connection.readyState !== 1) {
             status.text('Error');
-            input.attr('disabled', 'disabled').val('Unable to comminucate '
+            input.attr('disabled', 'disabled').val('Unable to communicate '
                                                  + 'with the WebSocket server.');
         }
     }, 3000);
