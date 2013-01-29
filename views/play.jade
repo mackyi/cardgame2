@@ -6,13 +6,19 @@ block scripts
 block content
 	games = locals.gamelist
 	mixin game(game)
-		.gameLabel
-			p #{game.name}
-			p #{game.gameType}
-			p #{game.usernames[0]}
-			ul.userlist
-				-each user in game.usernames
-					li=user
+		.thumbnail.gameLabel
+			.caption
+				h3 #{game.name}
+				p Game Type: #{game.gameType}
+				p Players:
+				ul.unstyled
+					if game.usernames.length == 0
+						li None
+					-each user in game.usernames
+						li=user
+				p 
+					gameLink = "/game/" + game._id
+					a.btn.btn-primary(href=gameLink) Join Game!
 	.container.backBox
 		-each game in games
 			mixin game(game)

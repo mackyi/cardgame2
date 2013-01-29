@@ -1,4 +1,8 @@
-
+.gameLabel{
+	width: 33%;
+	margin: 10px;
+	background-color: #ccc;
+}
 #hand{
 	height: 150px;
 	margin: 10px;

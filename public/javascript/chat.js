@@ -12,10 +12,13 @@ $(function () {
     var myName;
 	// on connection to server, ask for user's name with an anonymous callback
 
+    var pathname  = window.location.pathname;
+    game_id = pathname.substring(pathname.indexOf("/", 1)+1);
+    console.log(game_id);
 	socket.on('connect', function () {
 		console.log('hi')
         // first we want users to enter their names
-        socket.emit('joinGame');
+        socket.emit('joinGame', game_id);
     });
     socket.on('gameInfo', function(username){
         myName = username;

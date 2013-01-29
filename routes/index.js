@@ -59,11 +59,17 @@ module.exports = function(io, games){
 	},
 
 	play: function(req, res){
-		Game.find({active: true}, function(err, games){
+		Game.find({active: true}, function(err, dbGames){
+			var activeGames= [];
+			dbGames.forEach(function(game){
+				activeGames.push(games[game._id]);	
+			})
 			res.render('play.jade', {locals:
-				{gamelist: games}})
-		} )
+				{gamelist: activeGames}
+			})
+		})
 	},
+
 	// app.get('/game')
 	game: function(req, res) {
 		res.render('game.jade')

@@ -6,20 +6,33 @@ var mongoose = require('mongoose'),
 
 module.exports = function(io, games){
 	// Array with some colors in random order
-	var colors = [ 'red', 'green', 'blue', 'magenta', 'purple', 'plum', 'orange' ];
-	colors.sort(function(a,b) { return Math.random() > 0.5; } );
+	
 
 
 	//testing room
-	Game.find({active: true}, function(err, dbGames){
-			games = dbGames;
-			var history = [];
-			games[0].chat = {history: history, userColors: colors};
-	})
-
 	// var test = new Game({name: 'test', gameType: 'mWar'});
-	// games.push(test);
 	// test.save();
+	// games[test._id] = test;
+
+
+	Game.find({active: true}, function(err, dbGames){
+			dbGames.forEach(function(game){
+				games[game._id]=game;	
+			})
+			var history = [];
+			for(var game_id in games){
+				if(game_id !='undefined'){
+					var colors = [ 'red', 'green', 'blue', 'magenta', 'purple', 'plum', 'orange' ];
+					colors.sort(function(a,b) { return Math.random() > 0.5; } );
+					games[game_id].chat = {history: history, userColors: colors};
+					games[game_id].save();
+				}
+			}
+			//console.log(games);
+	})
+	console.log(games);
+
+	
 	
 
 	/**
@@ -50,23 +63,6 @@ module.exports = function(io, games){
 				}
 				console.log(user.username); //works
 				socket.user = user;
-				try{
-			 		socket.room = games[0];
-					socket.join(socket.room.name);
-					// update game users
-				 	try{
-				 		socket.room.users.push(socket.user);
-				 		socket.room.usernames.push(socket.user.username);
-						io.sockets.in(socket.room.name).emit('updateUsers', socket.room.usernames);
-				 	}
-			 		catch(err){
-			 			console.log('Failed to update users because ' + err);
-			 		}
-
-			 	}
-			 	catch(err){
-			 		console.log('Failed to join game because ' + err);
-			 	}
 			});
 		}
 		catch(err){
@@ -84,13 +80,28 @@ module.exports = function(io, games){
 			games[games.length]= new Game(options);
 		})
 
-		socket.on('joinGame', function(){
-			console.log('in game');
-			socket.userColor = colors.shift();
-	        socket.emit('color', socket.userColor)
-			socket.emit('gameInfo', socket.user.username);
-			io.sockets.in(socket.room.name).emit('updatechat', {time: (new Date()).getTime(), 
-				text:'You have connected to ' + socket.room.name, author: 'Server', color: 'black'});
+		socket.on('joinGame', function(game_id){
+			Game.findOne({_id: game_id}, function(err, game){
+				if(err || !game){ return err}
+				else{
+					//db
+					console.log(game);
+					socket.room = games[game._id];
+					socket.room.users.push(socket.user);
+				 	socket.room.usernames.push(socket.user.username);
+					//ram
+					socket.join(socket.room.name);
+					io.sockets.in(socket.room.name).emit('updateUsers', socket.room.usernames);
+					console.log(socket.room.chat);
+					socket.userColor = socket.room.chat.userColors.shift();
+					//events
+			        socket.emit('color', socket.userColor)
+					socket.emit('gameInfo', socket.user.username);
+					io.sockets.in(socket.room.name).emit('updatechat', {time: (new Date()).getTime(), 
+						text:'You have connected to ' + socket.room.name, author: 'Server', color: 'black'});
+				}
+			})
+			
 		})
 		// when the client emits 'adduser', this listens and executes
 		
@@ -149,16 +160,17 @@ module.exports = function(io, games){
 		})
 		// when the user disconnects.. perform this
 		socket.on('disconnect', function(){
-			
-			// echo globally that this client has left
-			socket.broadcast.to(socket.room).emit('updatechat', 'SERVER', socket.username + ' has disconnected');
-			socket.room.users.splice(socket.room.users.indexOf(socket.user),1);
-			socket.room.usernames.splice(socket.room.usernames.indexOf(socket.username),1);
-			// update list of users in chat, client-side
-			io.sockets.emit('updateusers', socket.room.usernames);
-			socket.broadcast.to(socket.room.name).emit('updateUsers', socket.room.usernames);
-			socket.leave(socket.room.name);
-			colors.push(userColor);
+			if(typeof socket.room != 'undefined'){
+				// echo globally that this client has left
+			// socket.broadcast.to(socket.room).emit('updatechat', 'SERVER', socket.username + ' has disconnected');
+			// socket.room.users.splice(socket.room.users.indexOf(socket.user),1);
+			// socket.room.usernames.splice(socket.room.usernames.indexOf(socket.username),1);
+			// // update list of users in chat, client-side
+			// io.sockets.emit('updateusers', socket.room.usernames);
+			// socket.broadcast.to(socket.room.name).emit('updateUsers', socket.room.usernames);
+			// socket.leave(socket.room.name);
+			// colors.push(userColor);
+			}
 		});
 	});
 }
